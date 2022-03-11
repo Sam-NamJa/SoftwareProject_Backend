@@ -46,3 +46,5 @@ def info_detail(request, pk):
     elif request.method == 'DELETE':
         user.delete()
         return HttpResponse(status=204)
+    
+#이후 추가 예정
