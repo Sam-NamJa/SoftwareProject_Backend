@@ -1,0 +1,14 @@
+###########################
+# gitignore.io 결과 전체 복사#
+###########################
+
+# 관리할 파일들 추가 #
+.idea/
+db.sqlite3
+/db_backup.sqlite3
+__pycache__/
+*.log
+*.pot
+*.pyc
+venv/
+secrets.json
