@@ -47,4 +47,4 @@ def info_detail(request, pk):
         user.delete()
         return HttpResponse(status=204)
     
-#이후 추가 예정
+#이후 추가 예정입니당
