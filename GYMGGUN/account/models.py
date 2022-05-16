@@ -2,10 +2,10 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-# Create your models here.
-class Account(models.Model):
+
+class AccountList(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    UID = models.CharField(max_length=100, unique=True)  # 파이어베이스uid
+    UID = models.CharField(max_length=100, primary_key=True)  # 파이어베이스uid
     user_authentication = models.PositiveSmallIntegerField(blank=True, default=0)  # 번호인증 여부
     user_info_input = models.PositiveSmallIntegerField(blank=True, default=0)  # 상세정보 입력했는지
 
@@ -16,12 +16,13 @@ class Account(models.Model):
         return self.UID
 
     class Meta:
-        db_table = 'account'
+        db_table = 'AccountList'
         ordering = ['created_at']
 
+
 class UsersInfo(models.Model):
-    # 운동 레벨을 제외하고 기본적으로 null값을 허용하겠음
-    UID = models.ForeignKey(User, primary_key=True, on_delete=models.CASCADE)
+    # UID와 운동 레벨을 제외하고 기본적으로 null값을 허용하겠음
+    UID = models.CharField(max_length=100, primary_key=True)
     # 유저 이름
     user_name = models.CharField(max_length=20, null=True)
     # 나이제한0~200
@@ -50,8 +51,8 @@ class UsersInfo(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.user_name
+        return self.UID
 
     class Meta:
-        db_table = 'users_info'
+        db_table = 'UsersInfo'
         ordering = ['updated_at']
