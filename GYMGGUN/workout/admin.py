@@ -4,3 +4,4 @@ from .models import *
 # Register your models here.
 admin.site.register(PlanList)
 admin.site.register(WorkoutList)
+admin.site.register(SetList)
