@@ -3,6 +3,7 @@ from django.db import models
 
 class PlanList(models.Model):
     planName = models.CharField(max_length=40, primary_key=True)
+    planDay = models.PositiveSmallIntegerField(default=0)
     UID = models.ForeignKey('accounts.AccountList', on_delete=models.CASCADE, db_column='UID')
     likeNum = models.PositiveSmallIntegerField(default=0)
     downloadNum = models.PositiveSmallIntegerField(default=0)
