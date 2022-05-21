@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.forms.models import model_to_dict
 from django.db.models import Q
 
@@ -36,8 +36,9 @@ def plan_set(request):
         data = json.loads(request.body)
         plan_name = data['planName']
         uid = data['UID']
+        user = ac.UsersInfo.objects.filter(UID=uid).values('user_name')
         get_uid = ac.AccountList.objects.get(UID=uid)
-        PlanList.objects.create(planName=plan_name, UID=get_uid)
+        PlanList.objects.create(planName=plan_name, UID=get_uid, user=user)
         plan = PlanList.objects.filter(planName=plan_name)
         hashtag_list = data['hashTagList']
         for hashTags in hashtag_list:
@@ -125,11 +126,21 @@ def plan_get(request, plan_name):
 
 
 @csrf_exempt
+def plan_del(request, plan_name):
+    if request.method == 'DELETE':
+        PlanList.objects.get(planName=plan_name).delete()
+        return JsonResponse({'msg': '플랜 삭제'}, status=201)
+    else:
+        return JsonResponse({'msg': 'error'}, status=400)
+
+
+@csrf_exempt
 def plan_get_uid(request, uid):
     if request.method == 'GET':
         plan_list = [
             {
                 'planName': plan.planName,
+                'user': plan.user,
                 'hashTagList': hashtag_get(plan),
                 'likeNum': plan.likeNum,
                 'downloadNum': plan.downloadNum,
@@ -161,5 +172,86 @@ def plan_get_hashtag(request, hashtag):
         ]
         plan_json = json.dumps(plan_list)
         return HttpResponse(plan_json)
+    else:
+        return JsonResponse({'msg': 'error'}, status=400)
+
+
+@csrf_exempt
+def like_plan(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        plan_name = data['planName']
+        like_user = data['UID']
+        plan = get_object_or_404(PlanList, planName=plan_name)
+        # like = get_object_or_404(LikeList, planName=plan_name)
+
+        check_like_plan = LikeList.objects.filter(like_user=like_user, planName=plan_name)
+        if check_like_plan:
+            LikeList.objects.get(like_user=like_user, planName=plan_name).delete()
+            plan.likeNum -= 1
+            plan.save()
+            return JsonResponse({'msg': '좋아요 취소'}, status=201)
+        else:
+            user = ac.AccountList.objects.get(UID=like_user)
+            p = PlanList.objects.get(planName=plan_name)
+            LikeList.objects.create(like_user=user, planName=p)
+            plan.likeNum += 1
+            plan.save()
+            return JsonResponse({'msg': '좋아요!~'}, status=201)
+    else:
+        return JsonResponse({'msg': 'error'}, status=400)
+
+
+@csrf_exempt
+def download_plan(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        plan_name = data['planName']
+        download_user = data['UID']
+        plan = get_object_or_404(PlanList, planName=plan_name)
+        # like = get_object_or_404(LikeList, planName=plan_name)
+
+        check_download_plan = DownloadList.objects.filter(download_user=download_user, planName=plan_name)
+        if check_download_plan:
+            DownloadList.objects.get(download_user=download_user, planName=plan_name).delete()
+            plan.downloadNum -= 1
+            plan.save()
+            return JsonResponse({'msg': '다운로드 취소'}, status=201)
+        else:
+            user = ac.AccountList.objects.get(UID=download_user)
+            p = PlanList.objects.get(planName=plan_name)
+            DownloadList.objects.create(download_user=user, planName=p)
+            plan.downloadNum += 1
+            plan.save()
+            return JsonResponse({'msg': '이 플랜 저장!~'}, status=201)
+    else:
+        return JsonResponse({'msg': 'error'}, status=400)
+
+
+@csrf_exempt
+def comment_plan(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        comment = data['comment']
+        uid = ac.AccountList.objects.get(UID=data['UID'])
+        plan_name = PlanList.objects.get(planName=data['planName'])
+        Comment.objects.create(comment=comment, UID=uid, planName=plan_name)
+        return JsonResponse({'msg': '댓글 작성~'}, status=201)
+    else:
+        return JsonResponse({'msg': 'error'}, status=400)
+
+
+@csrf_exempt
+def comment_plan_get(request, plan_name):
+    if request.method == 'GET':
+        comment_list = [
+            {
+                'comment': comment.comment,
+                'name': model_to_dict(comment.UID)['UID'],
+                'date': comment.created_string
+            }for comment in Comment.objects.filter(planName=plan_name)
+        ]
+        comments_json = json.dumps(comment_list)
+        return HttpResponse(comments_json)
     else:
         return JsonResponse({'msg': 'error'}, status=400)
