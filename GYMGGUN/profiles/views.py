@@ -11,7 +11,7 @@ import json, boto3, base64
 from django.core.serializers.json import DjangoJSONEncoder
 
 
-def image_download(host_id, image, image_name):
+def image_download(host_id, image, image_name): # 사진 다운받는 함수
     header, data = image.split(';base64,')
     data_format, ext = header.split('/')
     file_data = base64.b64decode(data)
