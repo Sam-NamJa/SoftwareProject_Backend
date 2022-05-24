@@ -4,9 +4,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
+from rest_framework.views import APIView
+from rest_framework.decorators import *
 from django.shortcuts import get_object_or_404, redirect
 from django.forms.models import model_to_dict
 from django.db.models import Q
+from django.utils.decorators import method_decorator
 
 from .models import *
 import accounts.models as ac
@@ -91,7 +94,6 @@ def plan_set(request):
         return JsonResponse({'msg': 'error'}, status=400)
 
 
-# @login_required
 @csrf_exempt
 def plan_get(request, plan_name):
     if request.method == 'GET':
@@ -123,6 +125,33 @@ def plan_get(request, plan_name):
         return HttpResponse(plan_json)
     else:
         return JsonResponse({'msg': 'error'}, status=400)
+
+
+def plan_get_override(plan_name):
+    plan = get_object_or_404(PlanList, pk=plan_name)
+    uid = plan.UID
+    tag = hashtag_get(plan)
+    plan_detail = {'UID': model_to_dict(uid)['UID'],
+                   'hashTagList': tag,
+                   'planName': plan.planName,
+                   'routineList': [
+                       {'workoutList': [
+                           {'setList': [
+                               {'count': eachSet.count,
+                                'weight': eachSet.weight
+                                }
+                               for eachSet in SetList.objects.filter(planName=plan_name, workoutName=workout.workoutName)
+                           ],
+                               'setNum': workout.setNum,
+                               'workoutName': workout.workoutName
+                           }
+                           for workout in WorkoutList.objects.filter(dayCount=day+1, planName=plan_name)
+                       ]
+                       }
+                       for day in range(plan.planDay)
+                   ]
+                   }
+    return plan_detail
 
 
 @csrf_exempt
@@ -229,13 +258,29 @@ def download_plan(request):
 
 
 @csrf_exempt
+def download_plan_get(request, uid):
+    if request.method == 'GET':
+        download_list = [
+            {
+                # 'planName': model_to_dict(download.planName)['planName']
+                'planList': plan_get_override(model_to_dict(download.planName)['planName'])
+            }for download in DownloadList.objects.filter(download_user=uid)
+        ]
+        download_list_json = json.dumps(download_list)
+        return HttpResponse(download_list_json)
+    else:
+        return JsonResponse({'msg': 'error'}, status=400)
+
+
+@csrf_exempt
 def comment_plan(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         comment = data['comment']
         uid = ac.AccountList.objects.get(UID=data['UID'])
+        comment_name = ac.UsersInfo.objects.get(UID=data['UID']).user_name
         plan_name = PlanList.objects.get(planName=data['planName'])
-        Comment.objects.create(comment=comment, UID=uid, planName=plan_name)
+        PlanComment.objects.create(comment=comment, UID=uid, comment_name=comment_name, planName=plan_name)
         return JsonResponse({'msg': '댓글 작성~'}, status=201)
     else:
         return JsonResponse({'msg': 'error'}, status=400)
@@ -247,9 +292,10 @@ def comment_plan_get(request, plan_name):
         comment_list = [
             {
                 'comment': comment.comment,
-                'name': model_to_dict(comment.UID)['UID'],
+                'UID': model_to_dict(comment.UID)['UID'],
+                'name': comment.comment_name,
                 'date': comment.created_string
-            }for comment in Comment.objects.filter(planName=plan_name)
+            }for comment in PlanComment.objects.filter(planName=plan_name)
         ]
         comments_json = json.dumps(comment_list)
         return HttpResponse(comments_json)

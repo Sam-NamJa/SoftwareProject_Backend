@@ -79,10 +79,11 @@ class LikeList(models.Model):
         db_table = 'LikeList'
 
 
-class Comment(models.Model):
+class PlanComment(models.Model):
     comment = models.TextField()
     date = models.DateTimeField(auto_now_add=True)
     UID = models.ForeignKey('accounts.AccountList', on_delete=models.CASCADE, db_column='UID')
+    comment_name = models.CharField(max_length=20, null=True)
     planName = models.ForeignKey(PlanList, on_delete=models.CASCADE, db_column='planName', null=True)
 
     def __str__(self):
