@@ -5,20 +5,27 @@ from rest_framework.parsers import JSONParser
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from GYMGGUN.settings import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, IMAGE_URL
+from django.forms.models import model_to_dict
 
 import accounts.models as ac
-import json, boto3, base64
+import json, boto3, base64, string, random
+
 from django.core.serializers.json import DjangoJSONEncoder
 
+default_image = "https://gymggun.s3.ap-northeast-2.amazonaws.com/None/default.png"
 
-def image_download(host_id, image, image_name): # 사진 다운받는 함수
-    header, data = image.split(';base64,')
-    data_format, ext = header.split('/')
-    file_data = base64.b64decode(data)
-    file_name = str(image_name) + "." + ext
+def image_download(host_id, image): # 사진 다운받는 함수
+    # header, data = image.split(';base64,')
+    # data_format, ext = header.split('/')
+    n = 50
+    rand_str = ""
+    for i in range(n):
+        rand_str += str(random.choice(string.ascii_uppercase + string.digits))
+    file_data = base64.b64decode(image)
+    file_name = rand_str + ".png"
     s3r = boto3.resource('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
     key = "%s" % (host_id)
-    s3r.Bucket(AWS_STORAGE_BUCKET_NAME).put_object(Key=key + '/%s' % (file_name), Body=file_data, ContentType=ext)
+    s3r.Bucket(AWS_STORAGE_BUCKET_NAME).put_object(Key=key + '/%s' % (file_name), Body=file_data, ContentType=".png")
     return IMAGE_URL + "%s/%s" % (host_id, file_name)
 
 
@@ -29,8 +36,7 @@ def get_profile(request, UID):
         try:
             obj = Profiles.objects.get(UID=uid_obj)
         except Profiles.DoesNotExist:
-            obj = Profiles.objects.create(UID=uid_obj, name="이름을 입력", subTitle="제목을 입력",
-                                          profileImg="프로필사진 입력", backgroundImg="배경사진 입력")
+            obj = Profiles.objects.create(UID=uid_obj, profileImg=default_image, backgroundImg=default_image)
         obj_data = {
             "UID": UID,
             "name": obj.name,
@@ -47,12 +53,29 @@ def get_profile(request, UID):
 
 @csrf_exempt
 def modify_profile(request, UID):
+    host_id = request.GET.get('host_id')
     if request.method == "PUT":
         pf_data = json.loads(request.body)
         uid_obj = ac.AccountList.objects.get(UID=UID)
         obj = Profiles.objects.filter(UID=uid_obj)
-        obj.update(name=pf_data['name'], subTitle=pf_data['subTitle'],
-                   profileImg=pf_data['profileImg'], backgroundImg=pf_data['backgroundImg'])
+        if pf_data['name'] is None:
+            name = obj.values('subTitle')
+        else:
+            name = pf_data['name']
+        if pf_data['subTitle'] is None:
+            subTitle = obj.values('subTitle')
+        else:
+            subTitle = pf_data['subTitle']
+        if pf_data['profileImg'] == "":
+            profileImg = default_image
+        else:
+            profileImg = image_download(host_id, pf_data['profileImg'])
+        if pf_data['backgroundImg'] == "":
+            backgroundImg = default_image
+        else:
+            backgroundImg = image_download(host_id, pf_data['backgroundImg'])
+        obj.update(name=name, subTitle=subTitle,
+                   profileImg=profileImg, backgroundImg=backgroundImg)
         return JsonResponse({'수정': '성공'}, status=201)
     else:
         return JsonResponse({'에러': 'error'}, status=400)
@@ -68,7 +91,7 @@ def makes_portfolios(request):
         pt_content = pt_data['content']
         host_id = request.GET.get('host_id')
         image = pt_data['file']
-        image_url = image_download(host_id, image, pt_title)
+        image_url = image_download(host_id, image)
         Portfolios.objects.create(title=pt_title, portfolioWriter=uid_obj
                                   , portfolioWriterProfile=pt_writer_profile,
                                   content=pt_content, contentImage=image_url)
@@ -107,16 +130,17 @@ def get_click_portfoilo(request, postN):
     if request.method == 'GET':
         obj = Portfolios.objects.get(postN=postN)
         obj_data = {
+            "portfolioWriter": model_to_dict(ac.AccountList.objects.get(UID=obj.portfolioWriter))['UID'],
             "title": obj.title,
             "portfolioWriterProfile": obj.portfolioWriterProfile,
             "content": obj.content,
             "contentImage": obj.contentImage,
-            "date": obj.date,
+            "date": obj.created_string,
             "likeN": obj.likeN,
             "commentN": obj.commentN,
             "postN": obj.postN
             }
-        pt_obj = json.dumps(obj_data, cls=DjangoJSONEncoder)
+        pt_obj = json.dumps(obj_data)
         return HttpResponse(pt_obj)
     else:
         return JsonResponse({'msg': 'error'}, status=400)
@@ -170,9 +194,9 @@ def get_comments(request, postN):
     if request.method == 'GET':
             data_postN = Portfolios.objects.get(postN=postN)
             obj_data = [{
-
+                "commentWriter": model_to_dict(ac.AccountList.objects.get(UID=obj.commentWriter))['UID'],
                 "commentWriterProfile": obj.commentWriterProfile,
-                "commentDate": obj.commentDate,
+                "commentDate": obj.created_string,
                 "comContent": obj.comContent,
                 "commentN": obj.commentN
             }for obj in ProfileComments.objects.filter(postN=data_postN)]
