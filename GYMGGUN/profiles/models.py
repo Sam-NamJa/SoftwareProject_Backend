@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 class Profiles(models.Model):
     UID = models.ForeignKey("accounts.AccountList", on_delete=models.CASCADE)
     name = models.CharField(max_length=15, null=True)
-    subTitle = models.CharField(max_length=100, null=True)
+    subTitle = models.CharField(max_length=100, default="subTitle을 입력해주세요")
     subscribeNum = models.SmallIntegerField(default=0)
     profileImg = models.TextField(null=True) # 사진
     backgroundImg = models.TextField(null=True) # 사진
@@ -23,7 +23,7 @@ class Portfolios(models.Model):
     postN = models.AutoField(primary_key=True)  # 게시물 번호 # 댓글 갯수
     title = models.CharField(max_length=50)# 제목
     portfolioWriter = models.ForeignKey("accounts.AccountList",
-                                        on_delete=models.CASCADE, related_name='uid_portfolios', db_column='uid_por')
+                                        on_delete=models.CASCADE, db_column='portfolioWriter')
     # portfolioWriterProfile = models.TextField(null=True) # 사진
     content = models.TextField(null=True)  # 내용
     contentImage = models.TextField(null=True) # 사진

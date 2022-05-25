@@ -2,14 +2,9 @@ import json
 
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponse
-from django.contrib.auth.decorators import login_required
-from django.core import serializers
-from rest_framework.views import APIView
-from rest_framework.decorators import *
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404
 from django.forms.models import model_to_dict
 from django.db.models import Q
-from django.utils.decorators import method_decorator
 
 from .models import *
 import accounts.models as ac
@@ -32,7 +27,6 @@ def hashtag_get(plan):
     return tag
 
 
-# @login_required
 @csrf_exempt
 def plan_set(request):
     if request.method == 'POST':
@@ -140,7 +134,8 @@ def plan_get_override(plan_name):
                                {'count': eachSet.count,
                                 'weight': eachSet.weight
                                 }
-                               for eachSet in SetList.objects.filter(planName=plan_name, workoutName=workout.workoutName)
+                               for eachSet in SetList.objects.filter(planName=plan_name,
+                                                                     workoutName=workout.workoutName)
                            ],
                                'setNum': workout.setNum,
                                'workoutName': workout.workoutName

@@ -14,5 +14,6 @@ urlpatterns = [
     path('get_click_portfoilo/<postN>', views.get_click_portfoilo),
     path('subscribe', views.subscribe_profile),
     path('portfolio', views.like_portfolio),
+    path('subscribe/portfolio/<uid>', views.subscribe_tab),
     path('post_image/', views.post_image)
 ]

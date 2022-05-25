@@ -9,9 +9,11 @@ from django.forms.models import model_to_dict
 
 import accounts.models as ac
 import json, boto3, base64, string, random
+from operator import itemgetter
 
 from django.core.serializers.json import DjangoJSONEncoder
 
+background_default_image = "https://gymggun.s3.ap-northeast-2.amazonaws.com/None/background_default.jpg"
 profile_default_image = "https://gymggun.s3.ap-northeast-2.amazonaws.com/None/profile_default.png"
 
 
@@ -39,7 +41,7 @@ def get_profile(request, UID):
             obj = Profiles.objects.get(UID=uid_obj)
         except Profiles.DoesNotExist:
             obj = Profiles.objects.create(UID=uid_obj, name=model_to_dict(name)['user_name'],
-                                          profileImg=profile_default_image, backgroundImg=profile_default_image)
+                                          profileImg=profile_default_image, backgroundImg=background_default_image)
         obj_data = {
             "UID": UID,
             "name": obj.name,
@@ -127,6 +129,27 @@ def get_portfolios(request, uid):
             return HttpResponse(status=204)
     else:
         return JsonResponse({'msg': 'error'}, status=400)
+
+
+def portfolios_get(postN):
+    # print(postN)
+    obj = Portfolios.objects.get(postN=postN)
+    obj_data = {
+        "portfolioWriter": model_to_dict(ac.AccountList.objects.get(UID=obj.portfolioWriter))['UID'],
+        "portfolioWriterName": model_to_dict(ac.UsersInfo.objects.get(UID=obj.portfolioWriter))['user_name'],
+        "title": obj.title,
+        "portfolioWriterProfile": model_to_dict(Profiles.objects.get(UID=obj.portfolioWriter))['profileImg'],
+        "content": obj.content,
+        "contentImage": obj.contentImage,
+        "date": obj.created_string,
+        "likeN": obj.likeN,
+        "commentN": obj.commentN,
+        "postN": obj.postN,
+        "liked": bool(PortfolioLikeList.objects.filter(like_user=obj.portfolioWriter,
+                                                       liked_port=obj.postN).exists())
+    }
+    # print(obj_data)
+    return obj_data
 
 
 @csrf_exempt
@@ -290,3 +313,21 @@ def like_portfolio(request):
     else:
         return JsonResponse({'msg': 'error'}, status=400)
 
+
+@csrf_exempt
+def subscribe_tab(request, uid):
+    if request.method == 'GET':
+        portfolio_list = []
+        for user in ProfileSubscribeList.objects.filter(ss_user=uid):
+            portfolio_count = Portfolios.objects.filter(portfolioWriter=user.pro_user).count()
+            portfolios = Portfolios.objects.filter(portfolioWriter=user.pro_user).values('postN')
+            for count in range(portfolio_count):
+                # print(portfolios[count])
+                portfolio_list.append(portfolios_get(portfolios[count]['postN']))
+        # print(type(portfolio_list[0]))
+        portfolio_list = sorted(portfolio_list, key=itemgetter('postN'), reverse=True)
+        # print(portfolio_list)
+        portfolios_json = json.dumps(portfolio_list)
+        return HttpResponse(portfolios_json)
+    else:
+        return JsonResponse({'msg': 'error'}, status=400)
