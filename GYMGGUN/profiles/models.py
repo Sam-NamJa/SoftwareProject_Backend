@@ -54,17 +54,17 @@ class Portfolios(models.Model):
             return False
 
 
-class ProfileComments(models.Model):
+class PortfolioComments(models.Model):
+    commentN = models.AutoField(primary_key=True)
     commentWriter = models.ForeignKey("accounts.AccountList",
                                       on_delete=models.CASCADE, related_name='uid_comments', db_column='uid_cm')
     commentWriterProfile = models.TextField()
     commentDate = models.DateTimeField(auto_now_add=True)
     comContent = models.CharField(max_length=150) # 댓글 내용
-    commentN = models.AutoField(primary_key=True)
     postN = models.ForeignKey(Portfolios, null=False, blank=False, on_delete=models.CASCADE)
 
-    # def __str__(self):
-    #     return self.commentN
+    def __str__(self):
+        return self.commentWriter
 
     class Meta:
         db_table = 'comments'

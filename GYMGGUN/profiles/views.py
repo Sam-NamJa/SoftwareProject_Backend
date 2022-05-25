@@ -182,7 +182,7 @@ def post_comments(request):
         uid_obj = ac.AccountList.objects.get(UID=data['commentWriter'])
         data_postN = Portfolios.objects.get(postN=data['postN'])
         commentWriterProfile = Profiles.objects.filter(UID=uid_obj).values('profileImg')
-        ProfileComments.objects.create(commentWriter=uid_obj, commentWriterProfile=commentWriterProfile
+        PortfolioComments.objects.create(commentWriter=uid_obj, commentWriterProfile=commentWriterProfile
                                 ,comContent=data['comContent'], postN=data_postN)
         return JsonResponse({'생성': '성공'}, status=201)
     else:
@@ -199,7 +199,7 @@ def get_comments(request, postN):
                 "commentDate": obj.created_string,
                 "comContent": obj.comContent,
                 "commentN": obj.commentN
-            }for obj in ProfileComments.objects.filter(postN=data_postN)]
+            }for obj in PortfolioComments.objects.filter(postN=data_postN)]
             ct_obj = json.dumps(obj_data, cls=DjangoJSONEncoder)
             return HttpResponse(ct_obj)
     else:
@@ -209,7 +209,7 @@ def get_comments(request, postN):
 @csrf_exempt
 def delete_comments(request, commentN):
     if request.method == 'DELETE':
-        ProfileComments.objects.get(commentN=commentN).delete()
+        PortfolioComments.objects.get(commentN=commentN).delete()
         return JsonResponse({'삭제': '성공'}, status=201)
     else:
         return JsonResponse({'에러': 'error'}, status=400)
