@@ -5,4 +5,7 @@ from .models import *
 admin.site.register(Profiles)
 admin.site.register(Portfolios)
 admin.site.register(PortfolioComments)
+admin.site.register(ProfileSubscribeList)
+admin.site.register(PortfolioLikeList)
+
 admin.site.register(Image)

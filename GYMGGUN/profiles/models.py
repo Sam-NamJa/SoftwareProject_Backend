@@ -1,9 +1,9 @@
 from django.db import models
 from datetime import datetime, timedelta, timezone
 
+
 class Profiles(models.Model):
-    UID = models.ForeignKey("accounts.AccountList", on_delete=models.CASCADE,
-                            related_name='uid_profiles', primary_key=True, db_column='uid_pr')
+    UID = models.ForeignKey("accounts.AccountList", on_delete=models.CASCADE)
     name = models.CharField(max_length=15, null=True)
     subTitle = models.CharField(max_length=100, null=True)
     subscribeNum = models.SmallIntegerField(default=0)
@@ -20,16 +20,16 @@ class Profiles(models.Model):
 
 
 class Portfolios(models.Model):
+    postN = models.AutoField(primary_key=True)  # 게시물 번호 # 댓글 갯수
     title = models.CharField(max_length=50)# 제목
     portfolioWriter = models.ForeignKey("accounts.AccountList",
                                         on_delete=models.CASCADE, related_name='uid_portfolios', db_column='uid_por')
-    portfolioWriterProfile = models.TextField(null=True) # 사진
+    # portfolioWriterProfile = models.TextField(null=True) # 사진
     content = models.TextField(null=True)  # 내용
     contentImage = models.TextField(null=True) # 사진
     date = models.DateTimeField(auto_now_add=True)
     likeN = models.IntegerField(default=0) # 좋아요한 사람 리스트는 좋아요 구현되면 수정
     commentN = models.IntegerField(default=0)  # 댓글 갯수
-    postN = models.AutoField(primary_key=True) # 게시물 번호 # 댓글 갯수
 
     def __str__(self):
         return self.title
@@ -89,3 +89,28 @@ class PortfolioComments(models.Model):
 class Image(models.Model):
     name = models.CharField(max_length=40, null=True)
     image = models.FileField(upload_to='contentImage/', null=True)
+
+
+class ProfileSubscribeList(models.Model):
+    ss_user = models.ForeignKey("accounts.AccountList", on_delete=models.CASCADE,
+                                related_name='ss_user', db_column='ss_user') # 구독한 사람
+    pro_user = models.ForeignKey("accounts.AccountList", on_delete=models.CASCADE,
+                                 related_name='pro_user', db_column='pro_user') # 프로필 주인
+
+    def __str__(self):
+        return "ProfileSubscribeList"
+
+    class Meta:
+        db_table = 'ProfileSubscribeList'
+
+
+class PortfolioLikeList(models.Model):
+    like_user = models.ForeignKey("accounts.AccountList", on_delete=models.CASCADE,
+                                  db_column='ss_user') # 좋아요한 사람
+    liked_port = models.ForeignKey(Portfolios, on_delete=models.CASCADE, db_column='liked_port')
+
+    def __str__(self):
+        return "PortfolioLikeList"
+
+    class Meta:
+        db_table = 'PortfolioLikeList'

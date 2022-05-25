@@ -12,5 +12,7 @@ urlpatterns = [
     path('get_comments/<postN>', views.get_comments),
     path('delete_comments/<commentN>', views.delete_comments),
     path('get_click_portfoilo/<postN>', views.get_click_portfoilo),
+    path('subscribe', views.subscribe_profile),
+    path('portfolio', views.like_portfolio),
     path('post_image/', views.post_image)
 ]
