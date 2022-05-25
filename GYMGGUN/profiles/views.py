@@ -58,11 +58,11 @@ def modify_profile(request, UID):
         pf_data = json.loads(request.body)
         uid_obj = ac.AccountList.objects.get(UID=UID)
         obj = Profiles.objects.filter(UID=uid_obj)
-        if pf_data['name'] is None:
+        if pf_data['name'] == "":
             name = obj.values('subTitle')
         else:
             name = pf_data['name']
-        if pf_data['subTitle'] is None:
+        if pf_data['subTitle'] == "":
             subTitle = obj.values('subTitle')
         else:
             subTitle = pf_data['subTitle']
