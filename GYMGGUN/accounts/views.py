@@ -29,7 +29,7 @@ def signup(request):
 
 @csrf_exempt
 def phone(request):
-    if request.method == 'PUT':
+    if request.method == 'POST':
         data = json.loads(request.body)
         uid = data['UID']
         try:
@@ -56,19 +56,20 @@ def login(request):
         uid = data['UID']
         try:
             person = AccountList.objects.get(UID=uid)
-            print(person.UID)
+            # print(person.UID)
             user = auth.authenticate(username=uid, password=uid)
             if person.user_authentication == 1:
                 if person.user_info_input == 1:
                     if user is not None:
                         auth.login(request, user)
+                        print('login user : ' + uid)
                         return JsonResponse({'msg': '로그인성공!!'}, status=200)
                 else:
                     return JsonResponse({'msg': '상세정보입력x'}, status=400)
             else:
                 return JsonResponse({'msg': '번호인증x'}, status=400)
         except AccountList.DoesNotExist:
-            return JsonResponse({'msg': '번호인증o'}, status=400)
+            return JsonResponse({'msg': 'signup부터 해주세여'}, status=400)
     else:
         return JsonResponse({'msg': 'error'}, status=400)
 

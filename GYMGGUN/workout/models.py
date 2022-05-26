@@ -64,8 +64,9 @@ class SetList(models.Model):
 
 
 class DownloadList(models.Model):
-    download_user = models.ForeignKey('accounts.AccountList', on_delete=models.CASCADE, db_column='download_user', null=True)
-    planName = models.ForeignKey(PlanList, on_delete=models.CASCADE, db_column='plan')
+    download_user = models.ForeignKey('accounts.AccountList', on_delete=models.CASCADE,
+                                      db_column='download_user', null=True)
+    planName = models.ForeignKey(PlanList, on_delete=models.CASCADE, db_column='planName')
 
     class Meta:
         db_table = 'DownloadList'
@@ -73,7 +74,7 @@ class DownloadList(models.Model):
 
 class LikeList(models.Model):
     like_user = models.ForeignKey('accounts.AccountList', on_delete=models.CASCADE, db_column='like_user')
-    planName = models.ForeignKey(PlanList, on_delete=models.CASCADE, db_column='plan')
+    planName = models.ForeignKey(PlanList, on_delete=models.CASCADE, db_column='planName')
 
     class Meta:
         db_table = 'LikeList'

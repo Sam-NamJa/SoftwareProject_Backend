@@ -121,12 +121,13 @@ def get_portfolios(request, uid):
                     "likeN": obj.likeN,
                     "commentN": obj.commentN,
                     "postN": obj.postN,
-                    "liked": bool(PortfolioLikeList.objects.filter(like_user=uid, liked_port=obj.postN).exists())
+                    "liked": bool(PortfolioLikeList.objects.filter(like_user=request.user.username,
+                                                                   liked_port=obj.postN).exists())
                 } for obj in Portfolios.objects.filter(portfolioWriter=uid_obj)]
             pt_obj = json.dumps(obj_data, cls=DjangoJSONEncoder)
             return HttpResponse(pt_obj)
         except:
-            return HttpResponse(status=204)
+            return HttpResponse([])
     else:
         return JsonResponse({'msg': 'error'}, status=400)
 
@@ -167,7 +168,7 @@ def get_click_portfoilo(request, postN):
             "likeN": obj.likeN,
             "commentN": obj.commentN,
             "postN": obj.postN,
-            "liked": bool(PortfolioLikeList.objects.filter(like_user=obj.portfolioWriter,
+            "liked": bool(PortfolioLikeList.objects.filter(like_user=request.user.username,
                                                            liked_port=obj.postN).exists())
         }
         pt_obj = json.dumps(obj_data)

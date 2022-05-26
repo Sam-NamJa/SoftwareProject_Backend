@@ -11,9 +11,9 @@ urlpatterns = [
     path('post_comments/', views.post_comments),
     path('get_comments/<postN>', views.get_comments),
     path('delete_comments/<commentN>', views.delete_comments),
-    path('get_click_portfoilo/<postN>', views.get_click_portfoilo),
+    path('get_click_portfolio/<postN>', views.get_click_portfoilo),
     path('subscribe', views.subscribe_profile),
-    path('portfolio', views.like_portfolio),
+    path('portfolio_like', views.like_portfolio),
     path('subscribe/portfolio/<uid>', views.subscribe_tab),
     path('post_image/', views.post_image)
 ]
