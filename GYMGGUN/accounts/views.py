@@ -63,13 +63,13 @@ def login(request):
                     if user is not None:
                         auth.login(request, user)
                         print('login user : ' + uid)
-                        return JsonResponse({'msg': '로그인성공!!'}, status=200)
+                        return JsonResponse({'msg': 'login success!!'}, status=200)
                 else:
-                    return JsonResponse({'msg': '상세정보입력x'}, status=400)
+                    return JsonResponse({'msg': 'info URL plz'}, status=400)
             else:
-                return JsonResponse({'msg': '번호인증x'}, status=400)
+                return JsonResponse({'msg': 'phone URL plz'}, status=400)
         except AccountList.DoesNotExist:
-            return JsonResponse({'msg': 'signup부터 해주세여'}, status=400)
+            return JsonResponse({'msg': 'signup URL plz'}, status=400)
     else:
         return JsonResponse({'msg': 'error'}, status=400)
 
@@ -78,9 +78,9 @@ def login(request):
 def logout(request): #로그아웃
     if request.user.is_authenticated:
         auth.logout(request)
-        return JsonResponse({"message": "로그아웃 성공"}, status=200)
+        return JsonResponse({"message": "logout success"}, status=200)
     else:
-        return JsonResponse({"message": "로그인 되어있지 않습니다."}, status=400)
+        return JsonResponse({"message": "already logout"}, status=400)
 
 
 @csrf_exempt
@@ -108,7 +108,7 @@ def info(request):
             user.update(workout_per_week=workout_per_week)
             user.update(updated_at=timezone.localtime())
             account.update(user_info_input=1)
-            return JsonResponse({'msg': '상세정보저장'}, status=201)
+            return JsonResponse({'msg': 'info save success'}, status=201)
         except AccountList.DoesNotExist:
             return JsonResponse({'msg': '번호인증o'}, status=400)
     else:

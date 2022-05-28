@@ -29,63 +29,66 @@ def hashtag_get(plan):
 
 @csrf_exempt
 def plan_set(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        plan_name = data['planName']
-        uid = data['UID']
-        user = ac.UsersInfo.objects.filter(UID=uid).values('user_name')
-        get_uid = ac.AccountList.objects.get(UID=uid)
-        PlanList.objects.create(planName=plan_name, UID=get_uid, user=user)
-        plan = PlanList.objects.filter(planName=plan_name)
-        hashtag_list = data['hashTagList']
-        for hashTags in hashtag_list:
-            if hashTags == '가슴':
-                plan.update(hashTagChest=hashTags)
-            elif hashTags == '등':
-                plan.update(hashTagBack=hashTags)
-            elif hashTags == '하체':
-                plan.update(hashTagLeg=hashTags)
-            elif hashTags == '어깨':
-                plan.update(hashTagShoulder=hashTags)
-            elif hashTags == '팔':
-                plan.update(hashTagArm=hashTags)
-            else:
-                plan.update(hashTagAir=hashTags)
+    try:
+        if request.method == 'POST':
+            data = json.loads(request.body)
+            plan_name = data['planName']
+            uid = data['UID']
+            user = ac.UsersInfo.objects.filter(UID=uid).values('user_name')
+            get_uid = ac.AccountList.objects.get(UID=uid)
+            PlanList.objects.create(planName=plan_name, UID=get_uid, user=user)
+            plan = PlanList.objects.filter(planName=plan_name)
+            hashtag_list = data['hashTagList']
+            for hashTags in hashtag_list:
+                if hashTags == '가슴':
+                    plan.update(hashTagChest=hashTags)
+                elif hashTags == '등':
+                    plan.update(hashTagBack=hashTags)
+                elif hashTags == '하체':
+                    plan.update(hashTagLeg=hashTags)
+                elif hashTags == '어깨':
+                    plan.update(hashTagShoulder=hashTags)
+                elif hashTags == '팔':
+                    plan.update(hashTagArm=hashTags)
+                else:
+                    plan.update(hashTagAir=hashTags)
 
-        routine_list = data['routineList']
-        day = 0
-        get_plan_name = PlanList.objects.get(planName=plan_name)
-        for routine in routine_list:
-            day += 1
-            workout_list = routine['workoutList']
-            for workout in workout_list:
-                w_list = WorkoutList.objects.create(planName=get_plan_name, UID=get_uid)
-                w_id = w_list.workoutID
-                workout_info = WorkoutList.objects.filter(workoutID=w_id)
-                workout_name = workout['workoutName']
-                set_num = int(workout['setNum'])
-                workout_info.update(dayCount=day, workoutName=workout_name, setNum=set_num)
-                set_num = 0
-                set_list = workout['setList']
-                for eachSet in set_list:
-                    s_list = SetList.objects.create(UID=get_uid, planName=get_plan_name,
-                                                    workoutName=workout_name, setCount=set_num+1)
-                    set_num += 1
-                    set_id = s_list.id
-                    set_info = SetList.objects.filter(id=set_id)
-                    if 'cou nt' in eachSet:
-                        count = int(eachSet['cou nt'])
-                    else:
-                        count = int(eachSet['count'])
-                    if 'weig ht' in eachSet:
-                        weight = int(eachSet['weig ht'])
-                    else:
-                        weight = int(eachSet['weight'])
-                    set_info.update(count=count, weight=weight)
-        plan.update(planDay=day)
-        return JsonResponse({'msg': 'plan 생성'}, status=201)
-    else:
-        return JsonResponse({'msg': 'error'}, status=400)
+            routine_list = data['routineList']
+            day = 0
+            get_plan_name = PlanList.objects.get(planName=plan_name)
+            for routine in routine_list:
+                day += 1
+                workout_list = routine['workoutList']
+                for workout in workout_list:
+                    w_list = WorkoutList.objects.create(planName=get_plan_name, UID=get_uid)
+                    w_id = w_list.workoutID
+                    workout_info = WorkoutList.objects.filter(workoutID=w_id)
+                    workout_name = workout['workoutName']
+                    set_num = int(workout['setNum'])
+                    workout_info.update(dayCount=day, workoutName=workout_name, setNum=set_num)
+                    set_num = 0
+                    set_list = workout['setList']
+                    for eachSet in set_list:
+                        s_list = SetList.objects.create(UID=get_uid, planName=get_plan_name,
+                                                        workoutName=workout_name, setCount=set_num+1)
+                        set_num += 1
+                        set_id = s_list.id
+                        set_info = SetList.objects.filter(id=set_id)
+                        if 'cou nt' in eachSet:
+                            count = int(eachSet['cou nt'])
+                        else:
+                            count = int(eachSet['count'])
+                        if 'weig ht' in eachSet:
+                            weight = int(eachSet['weig ht'])
+                        else:
+                            weight = int(eachSet['weight'])
+                        set_info.update(count=count, weight=weight)
+            plan.update(planDay=day)
+            return JsonResponse({'msg': 'plan 생성'}, status=201)
+        else:
+            return JsonResponse({'msg': 'error'}, status=400)
+    except Exception as e:
+        return HttpResponse(e, status=401)
 
 
 @csrf_exempt
@@ -159,7 +162,7 @@ def plan_del(request, plan_name):
 
 
 @csrf_exempt
-def plan_get_uid(request):
+def plan_get_uid(request, uid):
     if request.method == 'GET':
         try:
             plan_list = [
@@ -171,7 +174,7 @@ def plan_get_uid(request):
                     'downloadNum': plan.downloadNum,
                     'commentNum': plan.commentNum
                 }
-                for plan in PlanList.objects.filter(UID=request.user.username)
+                for plan in PlanList.objects.filter(UID=uid)
             ]
             plan_json = json.dumps(plan_list)
             # print(type(plan_json))
@@ -334,28 +337,45 @@ def plan_hashtag_sort(hashtag):
 
 
 @csrf_exempt
-def plan_get_all(request):
+def plan_get_all(request, uid):
     if request.method == 'GET':
-        plan_list = [
-            {
-                'planName': plan.planName,
-                'planDay': plan.planDay,
-                'hashTagList': hashtag_get(plan)
-            }
-            for plan in PlanList.objects.filter(UID=request.user.username)
-        ]
-        d = DownloadList.objects.filter(download_user=request.user.username)
+        plan_list = []
+        for plan in PlanList.objects.filter(UID=uid):
+            plan_list.append(plan_get_all_detail(plan.planName))
+        d = DownloadList.objects.filter(download_user=uid)
         temp = []
         for i in range(d.count()):
             temp.append(d[i].planName)
-            t = {
-                'planName': temp[i].planName,
-                'planDay': temp[i].planDay,
-                'hashTagList': hashtag_get(temp[i])
-            }
-            plan_list.append(t)
+            plan_list.append(plan_get_all_detail(temp[i].planName))
         plan_json = json.dumps(plan_list)
         # print(type(plan_json))
         return HttpResponse(plan_json)
     else:
         return JsonResponse({'msg': 'error'}, status=400)
+
+
+def plan_get_all_detail(plan_name):
+        plan = get_object_or_404(PlanList, pk=plan_name)
+        uid = plan.UID
+        tag = hashtag_get(plan)
+        plan_detail = {'UID': model_to_dict(uid)['UID'],
+                       'hashTagList': tag,
+                       'planName': plan.planName,
+                       'routineList': [
+                           {'workoutList': [
+                               {'setList': [
+                                   {'count': eachSet.count,
+                                    'weight': eachSet.weight
+                                    }
+                                   for eachSet in SetList.objects.filter(planName=plan_name, workoutName=workout.workoutName)
+                                    ],
+                                   'setNum': workout.setNum,
+                                   'workoutName': workout.workoutName
+                                }
+                               for workout in WorkoutList.objects.filter(dayCount=day+1, planName=plan_name)
+                           ]
+                           }
+                           for day in range(plan.planDay)
+                       ]
+                       }
+        return plan_detail

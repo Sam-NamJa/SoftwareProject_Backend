@@ -49,7 +49,7 @@ def get_profile(request, UID):
             "subscribeNum": obj.subscribeNum,
             "profileImg": obj.profileImg,
             "backgroundImg": obj.backgroundImg,
-            "subscribed": bool(ProfileSubscribeList.objects.filter(ss_user=request.user.username,
+            "subscribed": bool(ProfileSubscribeList.objects.filter(ss_user=UID,
                                                                    pro_user=UID).exists())
         }
         pf_obj = json.dumps(obj_data)
@@ -79,7 +79,7 @@ def modify_profile(request, UID):
         else:
             profileImg = image_download(host_id, pf_data['profileImg'])
         if pf_data['backgroundImg'] == "":
-            backgroundImg = profile_default_image
+            backgroundImg = background_default_image
         else:
             backgroundImg = image_download(host_id, pf_data['backgroundImg'])
         obj.update(name=name, subTitle=subTitle, profileImg=profileImg, backgroundImg=backgroundImg)
@@ -111,17 +111,19 @@ def get_portfolios(request, uid):
     if request.method == 'GET':
         try:
             uid_obj = ac.AccountList.objects.get(UID=uid)
+            name = ac.UsersInfo.objects.get(UID=uid)
             obj_data = [
                 {
                     "title": obj.title,
                     "portfolioWriter": uid,
+                    "portfolioWriterName": model_to_dict(name)['user_name'],
                     "content": obj.content,
                     "contentImage": obj.contentImage,
                     "date": obj.created_string,
                     "likeN": obj.likeN,
                     "commentN": obj.commentN,
                     "postN": obj.postN,
-                    "liked": bool(PortfolioLikeList.objects.filter(like_user=request.user.username,
+                    "liked": bool(PortfolioLikeList.objects.filter(like_user=uid,
                                                                    liked_port=obj.postN).exists())
                 } for obj in Portfolios.objects.filter(portfolioWriter=uid_obj)]
             pt_obj = json.dumps(obj_data, cls=DjangoJSONEncoder)
