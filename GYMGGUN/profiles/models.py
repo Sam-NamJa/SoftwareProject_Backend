@@ -20,7 +20,7 @@ class Profiles(models.Model):
 
 
 class Portfolios(models.Model):
-    postN = models.AutoField(primary_key=True)  # 게시물 번호 # 댓글 갯수
+    postN = models.AutoField(primary_key=True)  # 게시물 번호
     title = models.CharField(max_length=50)# 제목
     portfolioWriter = models.ForeignKey("accounts.AccountList",
                                         on_delete=models.CASCADE, db_column='portfolioWriter')

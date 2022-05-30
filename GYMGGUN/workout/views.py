@@ -8,6 +8,8 @@ from django.db.models import Q
 
 from .models import *
 import accounts.models as ac
+import profiles.models as pf
+from operator import itemgetter
 
 
 def hashtag_get(plan):
@@ -292,12 +294,15 @@ def comment_plan_get(request, plan_name):
     if request.method == 'GET':
         comment_list = [
             {
-                'comment': comment.comment,
-                'UID': model_to_dict(comment.UID)['UID'],
-                'name': comment.comment_name,
-                'date': comment.created_string
+                'commentN': comment.id,
+                'comContent': comment.comment,
+                'commentWriter': model_to_dict(comment.UID)['UID'],
+                'commentWriterName': comment.comment_name,
+                'commentWriterProfile': model_to_dict(pf.Profiles.objects.get(UID=comment.UID))['profileImg'],
+                'commentDate': comment.created_string
             }for comment in PlanComment.objects.filter(planName=plan_name)
         ]
+        comment_list = sorted(comment_list, key=itemgetter('commentN'), reverse=True)
         comments_json = json.dumps(comment_list)
         return HttpResponse(comments_json)
     else:
@@ -305,14 +310,21 @@ def comment_plan_get(request, plan_name):
 
 
 @csrf_exempt
+def delete_comments(request, commentN):
+    if request.method == 'DELETE':
+        PlanComment.objects.get(pk=commentN).delete()
+        return JsonResponse({'msg': 'success to delete'}, status=201)
+    else:
+        return JsonResponse({'msg': 'error'}, status=400)
+
+
+@csrf_exempt
 def plan_share_all(request):
-    hashtag_list = {'가슴': [], '등': [], '하체': [], '어깨': [], '팔': [], '유산소': []}
-    # print(list(hashtag_list.keys())[0])
-    plan_by_hashtag = {}
+    list = ['가슴', '등', '하체', '어깨', '팔', '유산소']
+    hashtag_list = []
     if request.method == 'GET':
         for i in range(6):
-            # print(hashtag_list[i])
-            hashtag_list[list(hashtag_list.keys())[i]] = plan_hashtag_sort(list(hashtag_list.keys())[i])
+            hashtag_list.append(plan_hashtag_sort(list[i]))
         plan_by_hashtag_json = json.dumps(hashtag_list)
         return HttpResponse(plan_by_hashtag_json)
     else:
@@ -324,7 +336,7 @@ def plan_hashtag_sort(hashtag):
             {
                 'planName': plan.planName,
                 'planDay': plan.planDay,
-                # 'hashTagList': hashtag_get(plan),
+                'hashTagList': hashtag_get(plan),
                 'likeNum': plan.likeNum,
                 'downloadNum': plan.downloadNum,
                 'commentNum': plan.commentNum
@@ -379,3 +391,15 @@ def plan_get_all_detail(plan_name):
                        ]
                        }
         return plan_detail
+
+
+@csrf_exempt
+def my_plan_get_all(request, uid):
+    if request.method == 'GET':
+        plan_list = []
+        for plan in PlanList.objects.filter(UID=uid):
+            plan_list.append(plan_get_all_detail(plan.planName))
+        plan_json = json.dumps(plan_list)
+        return HttpResponse(plan_json)
+    else:
+        return JsonResponse({'msg': 'error'}, status=400)

@@ -6,6 +6,7 @@ urlpatterns = [
     path('planSet', views.plan_set), # 플랜 작성 POST
     path('plan/share/', views.plan_share_all), # 플랜 공유 탭에 모든 플랜 전송 GET
     path('plan/all/<uid>', views.plan_get_all), # 다운로드한 플랜까지 합쳐서 보내주기
+    path('plan/my/<uid>', views.my_plan_get_all), # 자신이 만든 플랜 보내기
     path('planGet/<plan_name>/plan', views.plan_get), # 플랜 이름으로 세부정보 보내줌 GET
     path('planGet/<uid>/UID', views.plan_get_uid), # uid로 로그인한 사람이 보유한 plan all GET
     path('planDel/<plan_name>', views.plan_del), # planName으로 삭제 DELETE
@@ -15,4 +16,5 @@ urlpatterns = [
     # path('plan/download/<uid>/UID', views.download_plan_get), # 해당 uid가 다운로드한 플랜들 전송 GET
     path('plan/comment', views.comment_plan), # 해당 플랜에 댓글 작성 POST
     path('plan/comment/<plan_name>', views.comment_plan_get), # plan에 달린 댓글들 모두 전송
+    path('plan/comment/del/<int:commentN>', views.delete_comments), # plan에 달린 댓글 삭제
 ]

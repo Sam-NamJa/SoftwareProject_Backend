@@ -65,24 +65,20 @@ def modify_profile(request, UID):
         pf_data = json.loads(request.body)
         uid_obj = ac.AccountList.objects.get(UID=UID)
         obj = Profiles.objects.filter(UID=uid_obj)
-        if pf_data['name'] == "":
-            name = obj.values('name')
-        else:
+        if (pf_data['name'] == "") is False:
             name = pf_data['name']
+            obj.update(name=name)
             ac.UsersInfo.objects.filter(UID=uid_obj).update(user_name=name)
-        if pf_data['subTitle'] == "":
-            subTitle = obj.values('subTitle')
-        else:
+        if (pf_data['subTitle'] == "") is False:
             subTitle = pf_data['subTitle']
-        if pf_data['profileImg'] == "":
-            profileImg = profile_default_image
-        else:
+            obj.update(subTitle=subTitle)
+        if (pf_data['profileImg'] == "") is False:
             profileImg = image_download(host_id, pf_data['profileImg'])
-        if pf_data['backgroundImg'] == "":
-            backgroundImg = background_default_image
-        else:
+            obj.update(profileImg=profileImg)
+        if (pf_data['backgroundImg'] == "") is False:
             backgroundImg = image_download(host_id, pf_data['backgroundImg'])
-        obj.update(name=name, subTitle=subTitle, profileImg=profileImg, backgroundImg=backgroundImg)
+            obj.update(backgroundImg=backgroundImg)
+        # obj.update(name=name, subTitle=subTitle, profileImg=profileImg, backgroundImg=backgroundImg)
         return JsonResponse({'수정': '성공'}, status=201)
     else:
         return JsonResponse({'에러': 'error'}, status=400)
@@ -214,6 +210,9 @@ def post_comments(request):
         data = json.loads(request.body)
         uid_obj = ac.AccountList.objects.get(UID=data['commentWriter'])
         data_postN = Portfolios.objects.get(postN=data['postN'])
+        pf = Portfolios.objects.get(postN=data['postN'])
+        pf.commentN += 1
+        pf.save()
         commentWriterProfile = Profiles.objects.filter(UID=uid_obj).values('profileImg')
         PortfolioComments.objects.create(commentWriter=uid_obj, commentWriterProfile=commentWriterProfile
                                 ,comContent=data['comContent'], postN=data_postN)
@@ -228,7 +227,8 @@ def get_comments(request, postN):
             data_postN = Portfolios.objects.get(postN=postN)
             obj_data = [{
                 "commentWriter": model_to_dict(ac.AccountList.objects.get(UID=obj.commentWriter))['UID'],
-                "commentWriterProfile": obj.commentWriterProfile,
+                "commentWriterName": model_to_dict(ac.UsersInfo.objects.get(UID=obj.commentWriter))['user_name'],
+                "commentWriterProfile": model_to_dict(Profiles.objects.get(UID=obj.commentWriter))['profileImg'],
                 "commentDate": obj.created_string,
                 "comContent": obj.comContent,
                 "commentN": obj.commentN
@@ -242,7 +242,12 @@ def get_comments(request, postN):
 @csrf_exempt
 def delete_comments(request, commentN):
     if request.method == 'DELETE':
-        PortfolioComments.objects.get(commentN=commentN).delete()
+        pc = get_object_or_404(PortfolioComments, pk=commentN)
+        pf = get_object_or_404(Portfolios, pk=pc.postN_id)
+        pf.commentN -= 1
+        print(pf.commentN)
+        pf.save()
+        pc.delete()
         return JsonResponse({'삭제': '성공'}, status=201)
     else:
         return JsonResponse({'에러': 'error'}, status=400)

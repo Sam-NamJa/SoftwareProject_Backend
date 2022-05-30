@@ -6,6 +6,5 @@ urlpatterns = [
     path('phone', views.phone),
     path('login', views.login),
     path('logout', views.logout),
-    path('info', views.info),
-    path('jsonprint', views.jsonprint)
+    path('info', views.info)
 ]

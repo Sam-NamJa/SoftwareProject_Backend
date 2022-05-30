@@ -17,14 +17,14 @@ def signup(request):
         print(uid)
         try:
             AccountList.objects.get(UID=uid)
-            return JsonResponse({'msg': '이미 가입된 유저'}, status=400)
+            return JsonResponse({'msg': 'already signup'}, status=400)
         except AccountList.DoesNotExist: # 번호인증 전 UID 저장
             person = User.objects.create_user(username=uid, password=uid)
             user = AccountList.objects.create(user=person, UID=uid)
             UsersInfo.objects.create(UID=user.UID)
-            return JsonResponse({'UID': uid}, status=201)
+            return JsonResponse({'msg': 'success to signup'}, status=201)
     else:
-        return JsonResponse({'msg': "error"}, status=400)
+        return JsonResponse({'msg': 'request method error'}, status=400)
 
 
 @csrf_exempt
@@ -37,12 +37,12 @@ def phone(request):
             print(noob.UID)
             if noob.user_authentication == 0:
                 AccountList.objects.filter(UID=uid).update(user_authentication=1)
-                return JsonResponse({'msg': '번호 인증 여부 저장'}, status=201)
-            return JsonResponse({'msg': '이미 번호 인증하였음'}, status=201)
+                return JsonResponse({'msg': 'phone authentication success'}, status=201)
+            return JsonResponse({'msg': 'already phone authentication'}, status=201)
         except AccountList.DoesNotExist:
-            return JsonResponse({'msg': '번호 인증 o'}, status=400)
+            return JsonResponse({'msg': 'not exist user'}, status=400)
     else:
-        return JsonResponse({'msg': 'error'}, status=400)
+        return JsonResponse({'msg': 'request method error'}, status=400)
 
 
 @csrf_exempt
@@ -71,7 +71,7 @@ def login(request):
         except AccountList.DoesNotExist:
             return JsonResponse({'msg': 'signup URL plz'}, status=400)
     else:
-        return JsonResponse({'msg': 'error'}, status=400)
+        return JsonResponse({'msg': 'request method error'}, status=400)
 
 
 @csrf_exempt
@@ -110,17 +110,6 @@ def info(request):
             account.update(user_info_input=1)
             return JsonResponse({'msg': 'info save success'}, status=201)
         except AccountList.DoesNotExist:
-            return JsonResponse({'msg': '번호인증o'}, status=400)
+            return JsonResponse({'msg': 'not exist user'}, status=400)
     else:
-        return JsonResponse({'msg': 'error'}, status=400)
-
-
-@csrf_exempt
-def jsonprint(request):
-    data = json.loads(request.body)
-    parsing = data['routineList'][0]['workoutList'][0]['setList']
-    print(parsing[0].keys())
-    day = 1
-    # for day in range(5):
-    #     print(day)
-    return JsonResponse({'msg': parsing}, status=200)
+        return JsonResponse({'msg': 'request method error'}, status=400)
