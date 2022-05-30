@@ -15,5 +15,7 @@ urlpatterns = [
     path('subscribe', views.subscribe_profile),
     path('portfolio_like', views.like_portfolio),
     path('subscribe/portfolio/<uid>', views.subscribe_tab),
-    path('post_image/', views.post_image)
+    path('post_image/', views.post_image),
+
+    path('img/name/<uid>', views.image_name)
 ]

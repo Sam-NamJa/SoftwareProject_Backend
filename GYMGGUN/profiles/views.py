@@ -214,9 +214,10 @@ def post_comments(request):
         pf.commentN += 1
         pf.save()
         commentWriterProfile = Profiles.objects.filter(UID=uid_obj).values('profileImg')
-        PortfolioComments.objects.create(commentWriter=uid_obj, commentWriterProfile=commentWriterProfile
+        commentN = PortfolioComments.objects.create(commentWriter=uid_obj, commentWriterProfile=commentWriterProfile
                                 ,comContent=data['comContent'], postN=data_postN)
-        return JsonResponse({'생성': '성공'}, status=201)
+        c = {'commentN': commentN.commentN}
+        return HttpResponse(json.dumps(c))
     else:
         return JsonResponse({'에러': 'error'}, status=400)
 
@@ -337,5 +338,19 @@ def subscribe_tab(request, uid):
         # print(portfolio_list)
         portfolios_json = json.dumps(portfolio_list)
         return HttpResponse(portfolios_json)
+    else:
+        return JsonResponse({'msg': 'error'}, status=400)
+
+
+@csrf_exempt
+def image_name(request, uid):
+    if request.method == 'GET':
+        p = get_object_or_404(Profiles, UID=uid)
+        required_list = {
+            'name': p.name,
+            'profileImg': p.profileImg
+        }
+        required_list_json = json.dumps(required_list)
+        return HttpResponse(required_list_json)
     else:
         return JsonResponse({'msg': 'error'}, status=400)

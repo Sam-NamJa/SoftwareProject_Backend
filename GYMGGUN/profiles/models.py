@@ -22,7 +22,7 @@ class Profiles(models.Model):
 class Portfolios(models.Model):
     postN = models.AutoField(primary_key=True)  # 게시물 번호
     title = models.CharField(max_length=50)# 제목
-    portfolioWriter = models.ForeignKey("accounts.AccountList",
+    portfolioWriter = models.ForeignKey("accounts.AccountList", null=True,
                                         on_delete=models.CASCADE, db_column='portfolioWriter')
     # portfolioWriterProfile = models.TextField(null=True) # 사진
     content = models.TextField(null=True)  # 내용
@@ -32,7 +32,7 @@ class Portfolios(models.Model):
     commentN = models.IntegerField(default=0)  # 댓글 갯수
 
     def __str__(self):
-        return self.title
+        return str(self.title)
 
     class Meta:
         db_table = 'portfolios'
