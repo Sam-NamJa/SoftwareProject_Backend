@@ -9,23 +9,37 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
-import os
+import os,json
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+from celery.exceptions import ImproperlyConfigured
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+with open('secrets.json', 'r') as f:
+    secret = json.loads(f.read())
+
+
+def get_secret(setting, secrets=secret):
+    try:
+        return secrets[setting]
+    except:
+        msg = "Set key '{0}' in secret.json".format(setting)
+        raise ImproperlyConfigured(msg)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-1=ud$n(34b)43^+^i28xl*l7qn^c_-7m1v=u7@^wm&@9wrt8k('
+SECRET_KEY = get_secret('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['13.124.208.33']
+# ALLOWED_HOSTS = ['13.124.208.33']
+ALLOWED_HOSTS = ['13.124.208.33', '*']
 
 
 # Application definition
@@ -163,8 +177,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 # AWS S3관련 정보
-AWS_ACCESS_KEY_ID = 'AKIAUQVKGKLPKWGBSC47'
-AWS_SECRET_ACCESS_KEY = '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'
+AWS_ACCESS_KEY_ID = get_secret('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = get_secret('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = 'gymgguns'
 AWS_REGION = 'ap-northeast-2'
 AWS_QUERYSTRING_AUTH = False
