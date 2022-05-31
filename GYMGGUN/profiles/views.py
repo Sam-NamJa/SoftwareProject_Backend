@@ -13,8 +13,8 @@ from operator import itemgetter
 
 from django.core.serializers.json import DjangoJSONEncoder
 
-background_default_image = "https://gymggun.s3.ap-northeast-2.amazonaws.com/None/background_default.jpg"
-profile_default_image = "https://gymggun.s3.ap-northeast-2.amazonaws.com/None/profile_default.png"
+background_default_image = "https://gymgguns.s3.ap-northeast-2.amazonaws.com/None/background_default.jpg"
+profile_default_image = "https://gymgguns.s3.ap-northeast-2.amazonaws.com/None/profile_default.png"
 
 
 def image_download(host_id, image): # 사진 다운받는 함수
