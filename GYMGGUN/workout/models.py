@@ -10,6 +10,7 @@ class PlanList(models.Model):
     likeNum = models.PositiveSmallIntegerField(default=0)
     downloadNum = models.PositiveSmallIntegerField(default=0)
     commentNum = models.PositiveSmallIntegerField(default=0)
+
     hashTagChest = models.CharField(max_length=10, null=True)
     hashTagBack = models.CharField(max_length=10, null=True)
     hashTagLeg = models.CharField(max_length=10, null=True)
@@ -51,6 +52,7 @@ class WorkoutList(models.Model):
 class SetList(models.Model):
     UID = models.ForeignKey('accounts.AccountList', on_delete=models.CASCADE, db_column='UID')
     planName = models.ForeignKey(PlanList, on_delete=models.CASCADE, db_column='planName')
+    workoutID = models.ForeignKey(WorkoutList,on_delete=models.CASCADE, db_column='workoutUID', null=True)
     workoutName = models.CharField(max_length=20)
     setCount = models.PositiveSmallIntegerField(blank=True, null=True)
     count = models.PositiveSmallIntegerField(blank=True, null=True)

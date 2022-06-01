@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
-import os,json
+import os, json
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -39,7 +39,7 @@ SECRET_KEY = get_secret('SECRET_KEY')
 DEBUG = False
 
 # ALLOWED_HOSTS = ['13.124.208.33']
-ALLOWED_HOSTS = ['13.124.208.33', '*']
+ALLOWED_HOSTS = ['3.37.130.37', '*']
 
 
 # Application definition

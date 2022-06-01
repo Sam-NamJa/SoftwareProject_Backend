@@ -72,6 +72,7 @@ def plan_set(request):
                     set_list = workout['setList']
                     for eachSet in set_list:
                         s_list = SetList.objects.create(UID=get_uid, planName=get_plan_name,
+                                                        workoutID=WorkoutList.objects.get(workoutID=w_list.workoutID),
                                                         workoutName=workout_name, setCount=set_num+1)
                         set_num += 1
                         set_id = s_list.id
@@ -94,7 +95,7 @@ def plan_set(request):
 
 
 @csrf_exempt
-def plan_get(request, plan_name):
+def plan_get(request, plan_name, click_uid):
     if request.method == 'GET':
         plan = get_object_or_404(PlanList, pk=plan_name)
         uid = plan.UID
@@ -102,13 +103,21 @@ def plan_get(request, plan_name):
         plan_detail = {'UID': model_to_dict(uid)['UID'],
                        'hashTagList': tag,
                        'planName': plan.planName,
+                       'likeNum': plan.likeNum,
+                       'liked': bool(LikeList.objects.filter(like_user=click_uid, planName=plan.planName)),
+                       'downloaded': bool(DownloadList.objects.filter(download_user=click_uid, planName=plan.planName)),
+                       'downloadNum': plan.downloadNum,
+                       'commentNum': plan.commentNum,
                        'routineList': [
                            {'workoutList': [
                                {'setList': [
                                    {'count': eachSet.count,
                                     'weight': eachSet.weight
                                     }
-                                   for eachSet in SetList.objects.filter(planName=plan_name, workoutName=workout.workoutName)
+                                   for eachSet in SetList.objects.filter(planName=plan_name,
+                                                                         workoutName=workout.workoutName,
+                                                                         workoutID=workout.workoutID
+                                                                         )
                                     ],
                                    'setNum': workout.setNum,
                                    'workoutName': workout.workoutName
@@ -283,6 +292,8 @@ def comment_plan(request):
         uid = ac.AccountList.objects.get(UID=data['UID'])
         comment_name = ac.UsersInfo.objects.get(UID=data['UID']).user_name
         plan_name = PlanList.objects.get(planName=data['planName'])
+        plan_name.commentNum += 1
+        plan_name.save()
         PlanComment.objects.create(comment=comment, UID=uid, comment_name=comment_name, planName=plan_name)
         return JsonResponse({'msg': '댓글 작성~'}, status=201)
     else:
@@ -312,7 +323,11 @@ def comment_plan_get(request, plan_name):
 @csrf_exempt
 def delete_comments(request, commentN):
     if request.method == 'DELETE':
-        PlanComment.objects.get(pk=commentN).delete()
+        pc = PlanComment.objects.get(pk=commentN)
+        p = PlanList.objects.get(planName=pc.planName)
+        p.commentNum -= 1
+        p.save()
+        pc.delete()
         return JsonResponse({'msg': 'success to delete'}, status=201)
     else:
         return JsonResponse({'msg': 'error'}, status=400)
@@ -353,12 +368,12 @@ def plan_get_all(request, uid):
     if request.method == 'GET':
         plan_list = []
         for plan in PlanList.objects.filter(UID=uid):
-            plan_list.append(plan_get_all_detail(plan.planName))
+            plan_list.append(plan_get_all_detail(plan.planName, 'test'))
         d = DownloadList.objects.filter(download_user=uid)
         temp = []
         for i in range(d.count()):
             temp.append(d[i].planName)
-            plan_list.append(plan_get_all_detail(temp[i].planName))
+            plan_list.append(plan_get_all_detail(temp[i].planName, 'test'))
         plan_json = json.dumps(plan_list)
         # print(type(plan_json))
         return HttpResponse(plan_json)
@@ -366,20 +381,26 @@ def plan_get_all(request, uid):
         return JsonResponse({'msg': 'error'}, status=400)
 
 
-def plan_get_all_detail(plan_name):
+def plan_get_all_detail(plan_name, click_uid):
         plan = get_object_or_404(PlanList, pk=plan_name)
         uid = plan.UID
         tag = hashtag_get(plan)
         plan_detail = {'UID': model_to_dict(uid)['UID'],
                        'hashTagList': tag,
                        'planName': plan.planName,
+                       'likeNum': plan.likeNum,
+                       'liked': bool(LikeList.objects.filter(like_user=click_uid, planName=plan.planName)),
+                       'downloadNum': plan.downloadNum,
+                       'commentNum': plan.commentNum,
                        'routineList': [
                            {'workoutList': [
                                {'setList': [
                                    {'count': eachSet.count,
                                     'weight': eachSet.weight
                                     }
-                                   for eachSet in SetList.objects.filter(planName=plan_name, workoutName=workout.workoutName)
+                                   for eachSet in SetList.objects.filter(planName=plan_name,
+                                                                         workoutName=workout.workoutName,
+                                                                         workoutID=workout.workoutID)
                                     ],
                                    'setNum': workout.setNum,
                                    'workoutName': workout.workoutName
@@ -394,12 +415,26 @@ def plan_get_all_detail(plan_name):
 
 
 @csrf_exempt
-def my_plan_get_all(request, uid):
+def my_plan_get_all(request, uid, click_uid):
     if request.method == 'GET':
         plan_list = []
         for plan in PlanList.objects.filter(UID=uid):
-            plan_list.append(plan_get_all_detail(plan.planName))
+            plan_list.append(plan_get_all_detail(plan.planName, click_uid))
         plan_json = json.dumps(plan_list)
         return HttpResponse(plan_json)
     else:
         return JsonResponse({'msg': 'error'}, status=400)
+
+
+@csrf_exempt
+def workout_update(request):
+    if request.method == 'GET':
+        data = json.loads(request.body)
+        workoutID = data['workoutID']
+        workoutID = WorkoutList.objects.get(workoutID)
+        workoutID.isComplete = 1
+        workoutID.save()
+        return JsonResponse({'msg': 'success to update'}, status=201)
+    else:
+        return JsonResponse({'msg': 'error'}, status=400)
+

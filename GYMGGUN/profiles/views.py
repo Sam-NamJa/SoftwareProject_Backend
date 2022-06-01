@@ -26,6 +26,7 @@ def image_download(host_id, image): # 사진 다운받는 함수
         rand_str += str(random.choice(string.ascii_uppercase + string.digits))
     file_data = base64.b64decode(image)
     file_name = rand_str + ".png"
+    print(AWS_ACCESS_KEY_ID)
     s3r = boto3.resource('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
     key = "%s" % (host_id)
     s3r.Bucket(AWS_STORAGE_BUCKET_NAME).put_object(Key=key + '/%s' % (file_name), Body=file_data, ContentType=".png")
@@ -33,7 +34,7 @@ def image_download(host_id, image): # 사진 다운받는 함수
 
 
 @csrf_exempt
-def get_profile(request, UID):
+def get_profile(request, UID, click_uid):
     if request.method == 'GET':
         uid_obj = ac.AccountList.objects.get(UID=UID)
         name = ac.UsersInfo.objects.get(UID=UID)
@@ -49,7 +50,7 @@ def get_profile(request, UID):
             "subscribeNum": obj.subscribeNum,
             "profileImg": obj.profileImg,
             "backgroundImg": obj.backgroundImg,
-            "subscribed": bool(ProfileSubscribeList.objects.filter(ss_user=UID,
+            "subscribed": bool(ProfileSubscribeList.objects.filter(ss_user=click_uid,
                                                                    pro_user=UID).exists())
         }
         pf_obj = json.dumps(obj_data)
@@ -122,6 +123,7 @@ def get_portfolios(request, uid):
                     "liked": bool(PortfolioLikeList.objects.filter(like_user=uid,
                                                                    liked_port=obj.postN).exists())
                 } for obj in Portfolios.objects.filter(portfolioWriter=uid_obj)]
+            obj_data = sorted(obj_data, key=itemgetter('postN'), reverse=True)
             pt_obj = json.dumps(obj_data, cls=DjangoJSONEncoder)
             return HttpResponse(pt_obj)
         except:
@@ -130,7 +132,7 @@ def get_portfolios(request, uid):
         return JsonResponse({'msg': 'error'}, status=400)
 
 
-def portfolios_get(postN):
+def portfolios_get(postN, uid):
     # print(postN)
     obj = Portfolios.objects.get(postN=postN)
     obj_data = {
@@ -144,7 +146,7 @@ def portfolios_get(postN):
         "likeN": obj.likeN,
         "commentN": obj.commentN,
         "postN": obj.postN,
-        "liked": bool(PortfolioLikeList.objects.filter(like_user=obj.portfolioWriter,
+        "liked": bool(PortfolioLikeList.objects.filter(like_user=uid,
                                                        liked_port=obj.postN).exists())
     }
     # print(obj_data)
@@ -332,7 +334,7 @@ def subscribe_tab(request, uid):
             portfolios = Portfolios.objects.filter(portfolioWriter=user.pro_user).values('postN')
             for count in range(portfolio_count):
                 # print(portfolios[count])
-                portfolio_list.append(portfolios_get(portfolios[count]['postN']))
+                portfolio_list.append(portfolios_get(portfolios[count]['postN'], uid))
         # print(type(portfolio_list[0]))
         portfolio_list = sorted(portfolio_list, key=itemgetter('postN'), reverse=True)
         # print(portfolio_list)
