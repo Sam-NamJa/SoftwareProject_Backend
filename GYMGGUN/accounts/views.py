@@ -47,8 +47,8 @@ def phone(request):
 
 @csrf_exempt
 def login(request):
-    if request.user.is_authenticated:
-        return JsonResponse({'msg': '이미 로그인되어 있습니다.'}, status=400)
+    # if request.user.is_authenticated:
+    #     return JsonResponse({'msg': '이미 로그인되어 있습니다.'}, status=400)
 
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -57,11 +57,11 @@ def login(request):
         try:
             person = AccountList.objects.get(UID=uid)
             # print(person.UID)
-            user = auth.authenticate(username=uid, password=uid)
+            # user = auth.authenticate(username=uid, password=uid)
             if person.user_authentication == 1:
                 if person.user_info_input == 1:
-                    if user is not None:
-                        auth.login(request, user)
+                    # if user is not None:
+                        # /auth.login(request, user)
                         print('login user : ' + uid)
                         return JsonResponse({'msg': 'login success!!'}, status=200)
                 else:
